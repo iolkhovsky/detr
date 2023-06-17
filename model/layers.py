@@ -75,3 +75,9 @@ class DetrHead(nn.Module):
         logits = self._to_classes(x)
         boxes = self._to_boxes(x).sigmoid()
         return logits, boxes
+
+
+class LearnablePosEmbeddings2d(nn.Module):
+    def __init__(self, height, width):
+        super().__init__()
+        pass
