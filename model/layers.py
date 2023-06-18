@@ -78,6 +78,22 @@ class DetrHead(nn.Module):
 
 
 class LearnablePosEmbeddings2d(nn.Module):
-    def __init__(self, height, width):
+    def __init__(self, height, width, hidden_dim):
         super().__init__()
-        pass
+        self._h, self._w = height, width
+        self.row_embed = nn.Parameter(torch.rand(height, hidden_dim // 2))
+        self.col_embed = nn.Parameter(torch.rand(width, hidden_dim // 2))
+
+    def forward(self, x):
+        _, n, c = x.shape
+        pos_enc_2d = torch.cat(
+            [
+                self.row_embed.unsqueeze(1).repeat(1, self._w, 1),
+                self.col_embed.unsqueeze(0).repeat(self._h, 1, 1),
+            ],
+            dim=-1
+        )
+        flatten_embeddings = pos_enc_2d.flatten(0, 1).unsqueeze(0)
+        _, emb_n, emb_c = flatten_embeddings.shape
+        assert n == emb_n and c == emb_c
+        return flatten_embeddings + x
