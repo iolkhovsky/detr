@@ -36,7 +36,10 @@ class DETR(nn.Module):
             hidden_dim=hidden_dim,
             classes=classes,
         )
-        self._postprocessor = DetrPostprocessor()
+        self._postprocessor = DetrPostprocessor(
+            height=h,
+            width=w,
+        )
 
     def forward(self, x, targets=None):
         if targets is None:

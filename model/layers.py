@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision
 
 
@@ -105,10 +106,27 @@ class LearnablePosEmbeddings2d(nn.Module):
 
 
 class DetrPostprocessor(nn.Module):
-    def __init__(self):
+    def __init__(self, height, width):
         super().__init__()
+        self._image_size = torch.tensor(
+            [
+                height,
+                width,
+            ]
+        )
+        self._h, self._w = height, width
 
     def forward(self, logits, boxes, scales):
-        output = {}
+        _, n, _ = boxes.shape
 
-        return output
+        xywh_scales = torch.flip(
+            torch.tensor(scales) * self._image_size,
+            dims=[-1],
+        ).unsqueeze(1).repeat(1, n, 2)
+
+        scaled_xywh = torch.mul(boxes, xywh_scales)
+
+        return {
+            'scores': F.softmax(logits, dim=-1),
+            'boxes': scaled_xywh,
+        }
