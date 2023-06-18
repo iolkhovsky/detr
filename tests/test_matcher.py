@@ -38,8 +38,8 @@ def test_matcher():
         ],
         'boxes': [
             [
-                [98, 98, 40, 40],
                 [100, 110, 40, 42],
+                [98, 98, 40, 40],
                 [300, 300, 300, 300],
                 [28, 42, 30, 40],
             ],
@@ -70,8 +70,17 @@ def test_matcher():
     assert prediction['scores'].shape == (batch_size, queries, classes)
     assert prediction['boxes'].shape == (batch_size, queries, 4)
 
-    pred_indices, target_indices = HungarianMatcher()(
+    indices = HungarianMatcher()(
         outputs=prediction,
         targets=targets,
     )
 
+    expected_result = [
+        ([1, 3], [0, 1]),
+        ([3], [0]),
+    ]
+
+    for (expected_pred, expected_target), (pred_ind, target_ind) in \
+            zip(expected_result, indices):
+        assert all(torch.tensor(expected_pred) == pred_ind)
+        assert all(torch.tensor(expected_target) == target_ind)
