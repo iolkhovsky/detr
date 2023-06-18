@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from model.layers import (
     DetrPreprocessor, DetrBackbone, LearnablePosEmbeddings2d,
-    DetrHead
+    DetrHead, DetrPostprocessor
 )
 
 
@@ -35,18 +36,29 @@ class DETR(nn.Module):
             hidden_dim=hidden_dim,
             classes=classes,
         )
+        self._postprocessor = DetrPostprocessor()
 
-    def forward(self, x):
-        preprocessed, _ = self._preprocessor(x)
+    def forward(self, x, targets=None):
+        if targets is None:
+            self.eval()
+        else:
+            self.train()
+
+        preprocessed, scales = self._preprocessor(x)
         img_features = self._backbone(preprocessed)
-
         kv = self._position_emb(img_features)
-        # q = 
 
         features = self._transformer(
             src=kv,
             tgt=self._query,
         )
-
         logits, boxes = self._head(features)
-        return logits, boxes
+
+        outputs = self._postprocessor(logits, boxes, scales)
+        if targets is not None:
+            outputs['loss'] = self._criterion(
+                prediction=outputs,
+                targets=targets,
+            )
+
+        return outputs

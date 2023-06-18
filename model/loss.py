@@ -6,5 +6,5 @@ class BipartiteMatchingLoss(nn.Module):
     def __init__(self):
         super(BipartiteMatchingLoss, self).__init__()
 
-    def forward(self, pred, target):
+    def forward(self, prediction, targets):
         pass

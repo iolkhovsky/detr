@@ -102,3 +102,13 @@ class LearnablePosEmbeddings2d(nn.Module):
         assert h * w == emb_n and c == emb_c
 
         return flatten_embeddings + x
+
+
+class DetrPostprocessor(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, logits, boxes, scales):
+        output = {}
+
+        return output
