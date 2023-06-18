@@ -85,7 +85,10 @@ class LearnablePosEmbeddings2d(nn.Module):
         self.col_embed = nn.Parameter(torch.rand(width, hidden_dim // 2))
 
     def forward(self, x):
-        _, n, c = x.shape
+        b, c, h, w = x.shape
+        x = torch.reshape(x, [b, c, h * w])
+        x = torch.permute(x, [0, 2, 1])
+
         pos_enc_2d = torch.cat(
             [
                 self.row_embed.unsqueeze(1).repeat(1, self._w, 1),
@@ -94,6 +97,8 @@ class LearnablePosEmbeddings2d(nn.Module):
             dim=-1
         )
         flatten_embeddings = pos_enc_2d.flatten(0, 1).unsqueeze(0)
+
         _, emb_n, emb_c = flatten_embeddings.shape
-        assert n == emb_n and c == emb_c
+        assert h * w == emb_n and c == emb_c
+
         return flatten_embeddings + x
