@@ -6,6 +6,7 @@ from model.layers import (
     DetrPreprocessor, DetrBackbone, LearnablePosEmbeddings2d,
     DetrHead, DetrPostprocessor
 )
+from model.loss import BipartiteMatchingLoss
 
 
 class DETR(nn.Module):
@@ -40,6 +41,7 @@ class DETR(nn.Module):
             height=h,
             width=w,
         )
+        self._criterion = BipartiteMatchingLoss()
 
     def forward(self, x, targets=None):
         if targets is None:
