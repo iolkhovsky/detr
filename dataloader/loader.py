@@ -46,26 +46,6 @@ class VocPreprocessor:
         }
 
 
-def collate(batch):
-    codec = VocLabelsCodec()
-    images, bboxes, labels, objects_cnt = [], [], [], []
-    for image, img_targets in batch:
-        images.append(image)
-        img_boxes, img_labels = [], []
-        for obj in img_targets:
-            img_boxes.append(obj[:-1])
-            img_labels.append(codec.encode(obj[-1]))
-        bboxes.extend(img_boxes)
-        labels.extend(img_labels)
-        objects_cnt.append(len(img_labels))
-    return (
-        torch.Tensor(images),
-        torch.FloatTensor(np.asarray(bboxes)),
-        torch.IntTensor(np.asarray(labels)),
-        torch.IntTensor(np.asarray(objects_cnt)),
-    )
-
-
 def disbatch(boxes, labels, obj_amount):
     offsets = list(itertools.accumulate(obj_amount, initial=0))
     boxes = [boxes[offset:offset + objects_num] for objects_num, offset in zip(obj_amount, offsets)]
@@ -73,7 +53,29 @@ def disbatch(boxes, labels, obj_amount):
     return boxes, labels
 
 
-def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False, root="vocdata"):
+def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False, root="vocdata", target_classes=None):
+    codec = VocLabelsCodec(target_classes=target_classes)
+
+    def collate(batch):
+        images, bboxes, labels, objects_cnt = [], [], [], []
+        for image, img_targets in batch:
+            images.append(image)
+            img_boxes, img_labels = [], []
+            for obj in img_targets:
+                box, label = obj[:-1], obj[-1]
+                if label in codec:
+                    img_boxes.append(box)
+                    img_labels.append(codec.encode(label))
+            bboxes.extend(img_boxes)
+            labels.extend(img_labels)
+            objects_cnt.append(len(img_labels))
+        return (
+            torch.Tensor(images),
+            torch.FloatTensor(np.asarray(bboxes)),
+            torch.IntTensor(np.asarray(labels)),
+            torch.IntTensor(np.asarray(objects_cnt)),
+        )
+
     dataset = torchvision.datasets.VOCDetection(
         root=root,
         year="2012",

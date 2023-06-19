@@ -2,13 +2,15 @@
 
 
 class VocLabelsCodec:
-    def __init__(self):
+    def __init__(self, target_classes=None):
         self._names = [
             'person', 'bottle', 'chair', 'diningtable',
             'pottedplant', 'tvmonitor', 'sofa', 'aeroplane',
             'bicycle', 'boat', 'bus', 'car', 'motorbike', 'train',
             'bird', 'cat', 'cow', 'dog', 'horse', 'sheep',
         ]
+        if target_classes is not None:
+            self._names = [x for x in self._names if x in target_classes]
         self._name2id = dict(zip(self._names, list(range(len(self._names)))))
         self._id2name = {v: k for k, v in self._name2id.items()}
         self._colors = [
@@ -31,3 +33,6 @@ class VocLabelsCodec:
 
     def __len__(self):
         return len(self._names)
+
+    def __contains__(self, x):
+        return x in self._names
