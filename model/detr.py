@@ -53,9 +53,12 @@ class DETR(nn.Module):
         img_features = self._backbone(preprocessed)
         kv = self._position_emb(img_features)
 
+        b, _, _, _ = img_features.shape
+        q = self._query.repeat([b, 1, 1])
+
         features = self._transformer(
             src=kv,
-            tgt=self._query,
+            tgt=q,
         )
         logits, boxes = self._head(features)
 
