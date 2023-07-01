@@ -2,7 +2,6 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from dataloader.loader import *
-from dataloader.voc_labels import *
 
 
 class VocDataset(pl.LightningDataModule):
