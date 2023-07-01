@@ -35,6 +35,9 @@ class DetrModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         images, boxes, labels, obj_cnt = batch
+        if torch.sum(obj_cnt) == 0:
+            return None
+
         targets, offset = [], 0
         for cnt in obj_cnt:
             img_targets = {
