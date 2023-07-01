@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from model.matcher import HungarianMatcher
 
@@ -17,7 +18,7 @@ class ClassificationLoss(nn.Module):
         super().__init__()
 
     def forward(self, predictions, targets):
-        return 0.
+        return F.cross_entropy(predictions, targets.long())
 
 class BipartiteMatchingLoss(nn.Module):
     def __init__(self):
@@ -74,8 +75,8 @@ class BipartiteMatchingLoss(nn.Module):
         )
 
         classification_loss = self._clf(
-            predictions=aligned_prediction_boxes,
-            targets=aligned_target_boxes,
+            predictions=aligned_prediction_scores,
+            targets=aligned_target_labels,
         )
 
         with torch.no_grad():
