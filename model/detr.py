@@ -64,9 +64,11 @@ class DETR(nn.Module):
 
         outputs = self._postprocessor(logits, boxes, scales)
         if targets is not None:
-            outputs['loss'] = self._criterion(
-                prediction=outputs,
-                targets=targets,
+            outputs.update(
+                self._criterion(
+                    prediction=outputs,
+                    targets=targets,
+                )
             )
 
         return outputs

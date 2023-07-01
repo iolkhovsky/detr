@@ -90,4 +90,5 @@ class BipartiteMatchingLoss(nn.Module):
             'classification': classification_loss,
             'regression': regression_loss,
             'cardinality_error': cardinality_error,
+            'loss': classification_loss + regression_loss,
         }

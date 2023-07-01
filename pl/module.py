@@ -45,13 +45,7 @@ class DetrModule(pl.LightningModule):
             offset += cnt
 
         predictions = self.model(images, targets)
-        # self.log_dict(
-        #     {
-        #         f"loss/train": loss.detach(),
-        #         f"accuracy/train": acc,
-        #     }
-        # )
-        return predictions['loss']
+        return predictions
 
 
     def validation_step(self, batch, batch_idx: int) -> None:
