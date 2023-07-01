@@ -35,16 +35,14 @@ class DetrModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx: int) -> torch.Tensor:
         images, boxes, labels, obj_cnt = batch
-        labels_list, boxes_list, offset = [], [], 0
+        targets, offset = [], 0
         for cnt in obj_cnt:
-            boxes_list.append(boxes[offset:offset + cnt])
-            labels_list.append(labels[offset:offset + cnt])
+            img_targets = {
+                'labels': labels[offset:offset + cnt],
+                'boxes': boxes[offset:offset + cnt],
+            }
+            targets.append(img_targets)
             offset += cnt
-
-        targets = {
-            'labels': labels_list,
-            'boxes': boxes_list,
-        }
 
         predictions = self.model(images, targets)
         # self.log_dict(
