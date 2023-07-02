@@ -31,7 +31,7 @@ def parse_args():
     )
     parser.add_argument(
         '--val_interval', type=int,
-        default=20,
+        default=50,
         help='Validation check interval',
     )
     parser.add_argument(
@@ -41,7 +41,7 @@ def parse_args():
     )
     parser.add_argument(
         '--val_batch', type=int,
-        default=32,
+        default=16,
         help='Validation batch size',
     )
     parser.add_argument(

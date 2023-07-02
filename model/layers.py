@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
+from util import box_cxcywh_to_xyxy
+
 
 class DetrPreprocessor(nn.Module):
     def __init__(self, target_resolution=(224, 224)):
@@ -125,8 +127,9 @@ class DetrPostprocessor(nn.Module):
         ).unsqueeze(1).repeat(1, n, 2)
 
         scaled_xywh = torch.mul(boxes, xywh_scales.to(boxes.device))
+        x1y1x2y2 = box_cxcywh_to_xyxy(scaled_xywh)
 
         return {
             'scores': F.softmax(logits, dim=-1),
-            'boxes': scaled_xywh,
+            'boxes': x1y1x2y2,
         }

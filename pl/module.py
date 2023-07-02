@@ -85,19 +85,23 @@ class DetrModule(pl.LightningModule):
                 boxes=gt_boxes_list,
             )
 
-            pr_boxes_list, pr_scores_list = [], []
+            pr_labels_list, pr_boxes_list, pr_scores_list = [], [], []
             for boxes, scores in zip(predictions['boxes'], predictions['scores']):
                 max_scores, _ = torch.max(scores, dim=1)
-                non_bg_mask = torch.argmax(scores, dim=-1) > 0
+                labels = torch.argmax(scores, dim=-1)
+                non_bg_mask = labels > 0
                 high_score_mask = max_scores > THRESHOLD
                 mask = non_bg_mask & high_score_mask
+                filtered_labels = labels[mask]
                 filtered_boxes = boxes[mask]
                 filtered_scores = max_scores[mask]
+                pr_labels_list.append(filtered_labels)
                 pr_boxes_list.append(filtered_boxes)
                 pr_scores_list.append(filtered_scores)
 
             self.visualize_prediction(
                 images=images,
+                labels=pr_labels_list,
                 scores=pr_scores_list,
                 boxes=pr_boxes_list,
             )
@@ -117,12 +121,12 @@ class DetrModule(pl.LightningModule):
         writer = self.logger.experiment
         writer.add_image(f'Targets', pred_grid, self.global_step)
 
-    def visualize_prediction(self, images, scores, boxes):
+    def visualize_prediction(self, images, labels, scores, boxes):
         codec = VocLabelsCodec(['person'])
         visualizations = visualize_batch(
             images,
             boxes_batch=boxes,
-            labels_batch=None,
+            labels_batch=labels,
             scores_batch=scores,
             codec=codec,
             return_images=True

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from model.matcher import HungarianMatcher
-from util.bbox import generalized_box_iou, box_cxcywh_to_xyxy
+from util.bbox import generalized_box_iou
 
 
 class RegressionLoss(nn.Module):
@@ -22,8 +22,8 @@ class RegressionLoss(nn.Module):
 
         loss_giou = 1 - torch.diag(
             generalized_box_iou(
-                box_cxcywh_to_xyxy(predictions),
-                box_cxcywh_to_xyxy(targets),
+                predictions,
+                targets,
             )
         )
         loss_giou = loss_giou.sum()
@@ -48,14 +48,19 @@ class ClassificationLoss(nn.Module):
         return ce
 
 class BipartiteMatchingLoss(nn.Module):
-    def __init__(self, class_weight=1., l1_weight=5., giou_weight=2.):
+    def __init__(self, class_weight=1., l1_weight=5., giou_weight=2.,
+                 num_classes=1, eos_coef=0.1):
         super(BipartiteMatchingLoss, self).__init__()
         self._matcher = HungarianMatcher(
             class_weight=class_weight,
             l1_weight=l1_weight,
             giou_weight=giou_weight,
         )
-        self._clf = ClassificationLoss(class_weight)
+        self._clf = ClassificationLoss(
+            weight=class_weight,
+            num_classes=num_classes,
+            eos_coef=eos_coef
+        )
         self._regr = RegressionLoss(l1_weight, giou_weight)
 
     def forward(self, prediction, targets):

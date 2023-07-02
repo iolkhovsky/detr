@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from scipy.optimize import linear_sum_assignment
 
-from util import generalized_box_iou, box_cxcywh_to_xyxy
+from util import generalized_box_iou
 
 
 class HungarianMatcher(nn.Module):
@@ -27,8 +27,8 @@ class HungarianMatcher(nn.Module):
         cost_class = -out_prob[:, target_labels]
         cost_bbox = torch.cdist(out_bbox, target_bbox, p=1)
         cost_giou = -generalized_box_iou(
-            box_cxcywh_to_xyxy(out_bbox),
-            box_cxcywh_to_xyxy(target_bbox)
+            out_bbox,
+            target_bbox,
         )
 
         C = self._w_l1 * cost_bbox + self._w_class * cost_class + self._w_giou * cost_giou
