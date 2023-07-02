@@ -3,7 +3,7 @@ import numpy as np
 import itertools
 import torchvision
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 from dataloader.voc_labels import VocLabelsCodec
 
@@ -53,7 +53,8 @@ def disbatch(boxes, labels, obj_amount):
     return boxes, labels
 
 
-def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False, root="vocdata", target_classes=None):
+def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
+                     root="vocdata", target_classes=None, max_size=None):
     codec = VocLabelsCodec(target_classes=target_classes)
 
     def collate(batch):
@@ -83,4 +84,6 @@ def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
         download=download,
         transforms=VocPreprocessor(),
     )
+    if max_size:
+        dataset = Subset(dataset, range(max_size))
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=collate)

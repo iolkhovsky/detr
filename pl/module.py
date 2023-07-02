@@ -1,8 +1,11 @@
 import numpy as np
 import pytorch_lightning as pl
 import torch
+import torchvision
 
 from model import DETR
+from dataloader.visualization import visualize_batch
+from dataloader.voc_labels import VocLabelsCodec
 
 
 class DetrModule(pl.LightningModule):
@@ -48,8 +51,80 @@ class DetrModule(pl.LightningModule):
             offset += cnt
 
         predictions = self.model(images, targets)
+
+        self.log_dict(
+            {
+                f"loss/total": predictions['loss'].detach(),
+                f"loss/cardinality": predictions['cardinality_error'],
+                f"loss/boxes": predictions['regression'].detach(),
+                f"loss/labels": predictions['classification'].detach(),
+            }
+        )
+
         return predictions
 
 
     def validation_step(self, batch, batch_idx: int) -> None:
-      pass
+        THRESHOLD = 0.1
+        if batch_idx == 0:
+            images, boxes, labels, obj_cnt = batch
+            predictions = self.model(images)
+
+            gt_boxes_list, gt_labels_list, offset = [], [], 0
+            for cnt in obj_cnt:
+                gt_boxes_list.append(boxes[offset:offset + cnt])
+                gt_labels_list.append(labels[offset:offset + cnt])
+                offset += cnt
+
+            self.visualize_target(
+                images=images,
+                labels=gt_labels_list,
+                boxes=gt_boxes_list,
+            )
+
+            pr_boxes_list, pr_scores_list = [], []
+            for boxes, scores in zip(predictions['boxes'], predictions['scores']):
+                max_scores, _ = torch.max(scores, dim=1)
+                non_bg_mask = torch.argmax(scores, dim=-1) > 0
+                high_score_mask = max_scores > THRESHOLD
+                mask = non_bg_mask & high_score_mask
+                filtered_boxes = boxes[mask]
+                filtered_scores = max_scores[mask]
+                pr_boxes_list.append(filtered_boxes)
+                pr_scores_list.append(filtered_scores)
+
+            self.visualize_prediction(
+                images=images,
+                scores=pr_scores_list,
+                boxes=pr_boxes_list,
+            )
+
+    def visualize_target(self, images, labels, boxes):
+        codec = VocLabelsCodec(['person'])
+        visualizations = visualize_batch(
+            images,
+            boxes_batch=boxes,
+            labels_batch=labels,
+            scores_batch=None,
+            codec=codec,
+            return_images=True
+        )
+        image_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in visualizations]
+        pred_grid = torchvision.utils.make_grid(image_tensors)
+        writer = self.logger.experiment
+        writer.add_image(f'Targets', pred_grid, self.global_step)
+
+    def visualize_prediction(self, images, scores, boxes):
+        codec = VocLabelsCodec(['person'])
+        visualizations = visualize_batch(
+            images,
+            boxes_batch=boxes,
+            labels_batch=None,
+            scores_batch=scores,
+            codec=codec,
+            return_images=True
+        )
+        image_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in visualizations]
+        pred_grid = torchvision.utils.make_grid(image_tensors)
+        writer = self.logger.experiment
+        writer.add_image(f'Prediction', pred_grid, self.global_step)

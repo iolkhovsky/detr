@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from dataloader.loader import *
+from dataloader.loader import build_dataloader
 
 
 class VocDataset(pl.LightningDataModule):
@@ -33,4 +33,5 @@ class VocDataset(pl.LightningDataModule):
             download=False,
             root="vocdata",
             target_classes=self._target_classes,
+            max_size=128,
         )

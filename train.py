@@ -31,7 +31,7 @@ def parse_args():
     )
     parser.add_argument(
         '--val_interval', type=int,
-        default=None,
+        default=2,
         help='Validation check interval',
     )
     parser.add_argument(
@@ -41,7 +41,7 @@ def parse_args():
     )
     parser.add_argument(
         '--val_batch', type=int,
-        default=8,
+        default=32,
         help='Validation batch size',
     )
     return parser.parse_args()
@@ -69,11 +69,11 @@ def run_training(args):
             ModelCheckpoint(
                 dirpath=None,
                 filename='epoch-{epoch:04d}-loss-{loss/val:.6f}-acc-{accuracy/val:.6f}',
-                monitor='accuracy/val',
+                monitor='loss/total',
                 verbose=True,
                 save_last=True,
-                save_top_k=3,
-                mode='max',
+                save_top_k=2,
+                mode='min',
                 auto_insert_metric_name=False,
             ),
             LearningRateMonitor()
