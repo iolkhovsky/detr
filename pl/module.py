@@ -52,14 +52,17 @@ class DetrModule(pl.LightningModule):
 
         predictions = self.model(images, targets)
 
-        self.log_dict(
-            {
-                f"loss/total": predictions['loss'].detach(),
-                f"loss/cardinality": predictions['cardinality_error'],
-                f"loss/boxes": predictions['regression'].detach(),
-                f"loss/labels": predictions['classification'].detach(),
-            }
-        )
+        scalars = {
+            f"loss/total": predictions['loss'].detach(),
+            f"loss/cardinality": predictions['cardinality_error'],
+            f"loss/boxes": predictions['regression'].detach(),
+            f"loss/labels": predictions['classification'].detach(),
+        }
+        self.log_dict(scalars)
+
+        writer = self.logger.experiment
+        for k, v in scalars.items():
+            writer.add_scalar(k, v, self.global_step)
 
         return predictions
 
