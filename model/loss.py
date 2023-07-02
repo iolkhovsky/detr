@@ -26,6 +26,7 @@ class RegressionLoss(nn.Module):
                 box_cxcywh_to_xyxy(targets),
             )
         )
+        loss_giou = loss_giou.sum()
         if self._giou_w:
             loss_giou = loss_giou * self._giou_w
 
@@ -33,12 +34,15 @@ class RegressionLoss(nn.Module):
 
 
 class ClassificationLoss(nn.Module):
-    def __init__(self, weight=None):
+    def __init__(self, weight=None, num_classes=1, eos_coef=0.1):
         super().__init__()
         self._w = weight
+        self._empty_weight = torch.ones(num_classes + 1)
+        self._empty_weight[0] = eos_coef
+        self.register_buffer('empty_weight', self._empty_weight)
 
     def forward(self, predictions, targets):
-        ce = F.cross_entropy(predictions, targets.long())
+        ce = F.cross_entropy(predictions, targets.long(), self._empty_weight)
         if self._w:
             ce = ce * self._w
         return ce
