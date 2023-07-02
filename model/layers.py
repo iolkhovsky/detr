@@ -124,7 +124,7 @@ class DetrPostprocessor(nn.Module):
             dims=[-1],
         ).unsqueeze(1).repeat(1, n, 2)
 
-        scaled_xywh = torch.mul(boxes, xywh_scales)
+        scaled_xywh = torch.mul(boxes, xywh_scales.to(boxes.device))
 
         return {
             'scores': F.softmax(logits, dim=-1),
