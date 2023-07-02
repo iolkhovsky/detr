@@ -44,6 +44,10 @@ def parse_args():
         default=32,
         help='Validation batch size',
     )
+    parser.add_argument(
+        '--download', action='store_true',
+        help='Flag to download the dataset',
+    )
     return parser.parse_args()
 
 
@@ -115,6 +119,7 @@ def run_training(args):
     datamodule = VocDataset(
         train_batch=args.train_batch,
         val_batch=args.val_batch,
+        download=args.download,
     )
     trainer.fit(model=model, datamodule=datamodule)
 
