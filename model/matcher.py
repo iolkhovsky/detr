@@ -8,7 +8,7 @@ from util import generalized_box_iou, box_cxcywh_to_xyxy
 
 
 class HungarianMatcher(nn.Module):
-    def __init__(self, class_weight=1., l1_weight=1., giou_weight=1.):
+    def __init__(self, class_weight=1., l1_weight=5., giou_weight=2.):
         super().__init__()
         self._w_class = class_weight
         self._w_l1 = l1_weight

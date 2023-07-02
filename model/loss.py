@@ -7,37 +7,52 @@ from util.bbox import generalized_box_iou, box_cxcywh_to_xyxy
 
 
 class RegressionLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, l1_weight=None, giou_weight=None):
         super().__init__()
+        self._l1_w = l1_weight
+        self._giou_w = giou_weight
 
     def forward(self, predictions, targets):
         loss_bbox = F.l1_loss(predictions, targets, reduction='none')
         num_boxes = len(targets)
 
-        losses = {}
-        losses['loss_bbox'] = loss_bbox.sum() / num_boxes
+        l1_loss = loss_bbox.sum() / num_boxes
+        if self._l1_w:
+            l1_loss = l1_loss * self._l1_w
 
-        loss_giou = 1 - torch.diag(generalized_box_iou(
-            box_cxcywh_to_xyxy(predictions),
-            box_cxcywh_to_xyxy(targets)))
-        losses['loss_giou'] = loss_giou.sum() / num_boxes
+        loss_giou = 1 - torch.diag(
+            generalized_box_iou(
+                box_cxcywh_to_xyxy(predictions),
+                box_cxcywh_to_xyxy(targets),
+            )
+        )
+        if self._giou_w:
+            loss_giou = loss_giou * self._giou_w
 
-        return losses['loss_bbox'] + losses['loss_giou']
+        return l1_loss + loss_giou
 
 
 class ClassificationLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, weight=None):
         super().__init__()
+        self._w = weight
 
     def forward(self, predictions, targets):
-        return F.cross_entropy(predictions, targets.long())
+        ce = F.cross_entropy(predictions, targets.long())
+        if self._w:
+            ce = ce * self._w
+        return ce
 
 class BipartiteMatchingLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, class_weight=1., l1_weight=5., giou_weight=2.):
         super(BipartiteMatchingLoss, self).__init__()
-        self._matcher = HungarianMatcher()
-        self._clf = ClassificationLoss()
-        self._regr = RegressionLoss()
+        self._matcher = HungarianMatcher(
+            class_weight=class_weight,
+            l1_weight=l1_weight,
+            giou_weight=giou_weight,
+        )
+        self._clf = ClassificationLoss(class_weight)
+        self._regr = RegressionLoss(l1_weight, giou_weight)
 
     def forward(self, prediction, targets):
         matching = self._matcher(

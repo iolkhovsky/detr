@@ -11,7 +11,8 @@ from model.loss import BipartiteMatchingLoss
 
 class DETR(nn.Module):
     def __init__(self, resolution=(224, 224), hidden_dim=256, classes=1,
-                 attention_heads=8, transformer_layers=6, queries=100):
+                 attention_heads=8, transformer_layers=6, queries=20,
+                 class_weight=1., l1_weight=5., giou_weight=2.):
         super(DETR,self).__init__()
         h, w = resolution
         self._preprocessor = DetrPreprocessor(
@@ -41,7 +42,11 @@ class DETR(nn.Module):
             height=h,
             width=w,
         )
-        self._criterion = BipartiteMatchingLoss()
+        self._criterion = BipartiteMatchingLoss(
+            class_weight=class_weight,
+            l1_weight=l1_weight,
+            giou_weight=giou_weight,
+        )
 
     def forward(self, x, targets=None):
         if targets is None:
