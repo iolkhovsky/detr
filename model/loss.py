@@ -45,6 +45,7 @@ class ClassificationLoss(nn.Module):
         self.register_buffer('empty_weight', self._empty_weight)
 
     def forward(self, predictions, targets):
+        self._empty_weight = self._empty_weight.to(predictions.device)
         ce = F.cross_entropy(predictions, targets.long(), self._empty_weight, reduction='sum')
         if self._w:
             ce = ce * self._w
@@ -102,7 +103,7 @@ class BipartiteMatchingLoss(nn.Module):
                     torch.unsqueeze(pred_scores[i], 0)
                 )
                 aligned_target_labels.append(
-                    torch.tensor([0]).long()
+                    torch.tensor([0]).long().to(pred_scores.device)
                 )
 
         aligned_prediction_boxes = torch.cat(aligned_prediction_boxes)
