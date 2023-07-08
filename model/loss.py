@@ -13,6 +13,9 @@ class RegressionLoss(nn.Module):
         self._giou_w = giou_weight
 
     def forward(self, predictions, targets):
+        if len(targets) == 0:
+            return 0.
+
         loss_bbox = F.l1_loss(predictions, targets, reduction='none')
         num_boxes = len(targets)
 
@@ -42,7 +45,7 @@ class ClassificationLoss(nn.Module):
         self.register_buffer('empty_weight', self._empty_weight)
 
     def forward(self, predictions, targets):
-        ce = F.cross_entropy(predictions, targets.long(), self._empty_weight)
+        ce = F.cross_entropy(predictions, targets.long(), self._empty_weight, reduction='sum')
         if self._w:
             ce = ce * self._w
         return ce
@@ -92,23 +95,26 @@ class BipartiteMatchingLoss(nn.Module):
                 aligned_target_labels.append(
                     torch.unsqueeze(img_targets['labels'][tgt_idx], 0)
                 )
-
-        if len(aligned_target_labels) == 0:
-            return {
-                'classification': -1.,
-                'regression': -1.,
-                'cardinality_error': 0.,
-            }
+            for i in range(len(pred_scores)):
+                if i in pred_ids:
+                    continue
+                aligned_prediction_scores.append(
+                    torch.unsqueeze(pred_scores[i], 0)
+                )
+                aligned_target_labels.append(
+                    torch.tensor([0]).long()
+                )
 
         aligned_prediction_boxes = torch.cat(aligned_prediction_boxes)
         aligned_target_boxes = torch.cat(aligned_target_boxes)
-        aligned_prediction_scores = torch.cat(aligned_prediction_scores)
-        aligned_target_labels = torch.cat(aligned_target_labels)
 
         regression_loss = self._regr(
             predictions=aligned_prediction_boxes,
             targets=aligned_target_boxes,
         )
+
+        aligned_prediction_scores = torch.cat(aligned_prediction_scores)
+        aligned_target_labels = torch.cat(aligned_target_labels)
 
         classification_loss = self._clf(
             predictions=aligned_prediction_scores,
