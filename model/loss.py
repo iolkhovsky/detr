@@ -29,7 +29,7 @@ class RegressionLoss(nn.Module):
                 targets,
             )
         )
-        loss_giou = loss_giou.sum()
+        loss_giou = loss_giou.sum() / num_boxes
         if self._giou_w:
             loss_giou = loss_giou * self._giou_w
 
