@@ -12,7 +12,7 @@ from pl.datamodule import VocDataset
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(prog='CIFAR10 classifier trainer')
+    parser = argparse.ArgumentParser(prog='DETR trainer')
     parser.add_argument(
         '--device', type=str,
         default='cpu',
@@ -122,9 +122,10 @@ def run_training(args):
     model = DetrModule()
     if args.checkpoint:
         print(f'Fine-tuning checkpoint is set: {args.checkpoint}')
+        checkpoint_dev = 'cuda' if args.device == 'gpu' else 'cpu'
         model = DetrModule.load_from_checkpoint(
             args.checkpoint,
-            map_location=torch.device(args.device)
+            map_location=torch.device(checkpoint_dev)
         )
     datamodule = VocDataset(
         train_batch=args.train_batch,
