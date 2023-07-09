@@ -1,12 +1,11 @@
 import argparse
 import datetime
-import json
-import os
 import pytorch_lightning as pl
 from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.profilers import SimpleProfiler
+import torch
 
 from pl.module import DetrModule
 from pl.datamodule import VocDataset
@@ -43,6 +42,11 @@ def parse_args():
         '--val_batch', type=int,
         default=16,
         help='Validation batch size',
+    )
+    parser.add_argument(
+        '--checkpoint', type=str,
+        default=None,
+        help='Abs path to fine-tuning checkpoint',
     )
     parser.add_argument(
         '--download', action='store_true',
@@ -116,6 +120,12 @@ def run_training(args):
         default_root_dir=None,
     )
     model = DetrModule()
+    if args.checkpoint:
+        print(f'Fine-tuning checkpoint is set: {args.checkpoint}')
+        model = DetrModule.load_from_checkpoint(
+            args.checkpoint,
+            map_location=torch.device(args.device)
+        )
     datamodule = VocDataset(
         train_batch=args.train_batch,
         val_batch=args.val_batch,

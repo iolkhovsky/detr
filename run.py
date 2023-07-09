@@ -12,7 +12,7 @@ from dataloader.voc_labels import VocLabelsCodec
 def parse_cmd_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint',
-                        default=os.path.join('checkpoints', 'epoch-0016-loss-0.000000-acc-0.000000.ckpt'),
+                        default=os.path.join('checkpoints', 'epoch-0011-loss-0.000000-acc-0.000000-v1.ckpt'),
                         help='Path to DETR checkpoint')
     parser.add_argument('--threshold',
                         default=0.05,
@@ -22,9 +22,9 @@ def parse_cmd_args():
 
 
 def compile_model(checkpoint_path, device=None):
-    model = DetrModule().load_from_checkpoint(checkpoint_path, map_location=torch.device('cpu'))
-    # if device: 
-    #     model = model.to(device)
+    if device is None:
+        device = 'cpu'
+    model = DetrModule.load_from_checkpoint(checkpoint_path, map_location=torch.device('cpu'))
     return model
 
 
@@ -83,7 +83,7 @@ def run(args):
     video_source = str(0)
     if video_source.isdigit():
         video_source = int(video_source)
-    resolution = (448, 448)
+    resolution = (640, 480)
     threshold = args.threshold
     labels_codec = VocLabelsCodec(['person'])
     cap = cv2.VideoCapture(video_source)
