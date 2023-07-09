@@ -47,6 +47,6 @@ def denormalize_boxes(normalized_xyxy, imgs_shapes):
     for img_boxes, img_shape in zip(normalized_xyxy, imgs_shapes):
         if len(img_boxes):
             h, w, _ = img_shape
-            img_boxes = img_boxes * torch.tensor([w, h] * 2)
+            img_boxes = img_boxes * torch.tensor([w, h] * 2).to(img_boxes.device)
         result.append(img_boxes)
     return result
