@@ -118,18 +118,13 @@ class DetrPostprocessor(nn.Module):
         )
         self._h, self._w = height, width
 
-    def forward(self, logits, boxes, scales):
-        _, n, _ = boxes.shape
+    def forward(self, norm_boxes, scales):
+        _, n, _ = norm_boxes.shape
 
-        xywh_scales = torch.flip(
+        xyxy_scales = torch.flip(
             torch.tensor(scales) * self._image_size,
             dims=[-1],
         ).unsqueeze(1).repeat(1, n, 2)
+        scaled_xyxy = torch.mul(norm_boxes, xyxy_scales.to(norm_boxes.device))
 
-        scaled_xywh = torch.mul(boxes, xywh_scales.to(boxes.device))
-        x1y1x2y2 = box_cxcywh_to_xyxy(scaled_xywh)
-
-        return {
-            'scores': F.softmax(logits, dim=-1),
-            'boxes': x1y1x2y2,
-        }
+        return scaled_xyxy

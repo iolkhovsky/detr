@@ -7,6 +7,7 @@ from model.layers import (
     DetrHead, DetrPostprocessor
 )
 from model.loss import BipartiteMatchingLoss
+from util import box_cxcywh_to_xyxy
 
 
 class DETR(nn.Module):
@@ -65,15 +66,27 @@ class DETR(nn.Module):
             src=kv,
             tgt=q,
         )
-        logits, boxes = self._head(features)
+        logits, norm_xywh_boxes = self._head(features)
 
-        outputs = self._postprocessor(logits, boxes, scales)
+        norm_xyxy_boxes = box_cxcywh_to_xyxy(norm_xywh_boxes)
+        scores = F.softmax(logits, dim=-1)
+        xyxy_boxes = self._postprocessor(norm_xyxy_boxes, scales)
+
+        prediction = {
+            'scores': scores,
+            'boxes': xyxy_boxes,
+        }
+
         if targets is not None:
-            outputs.update(
+            prediction.update(
                 self._criterion(
-                    prediction=outputs,
+                    prediction={
+                        'boxes': norm_xyxy_boxes,
+                        'logits': logits,
+                        'scores': scores,
+                    },
                     targets=targets,
                 )
             )
 
-        return outputs
+        return prediction

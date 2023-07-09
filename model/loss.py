@@ -44,9 +44,9 @@ class ClassificationLoss(nn.Module):
         self._empty_weight[0] = eos_coef
         self.register_buffer('empty_weight', self._empty_weight)
 
-    def forward(self, predictions, targets):
-        self._empty_weight = self._empty_weight.to(predictions.device)
-        ce = F.cross_entropy(predictions, targets.long(), self._empty_weight, reduction='sum')
+    def forward(self, logits, targets):
+        self._empty_weight = self._empty_weight.to(logits.device)
+        ce = F.cross_entropy(logits, targets.long(), self._empty_weight, reduction='mean')
         if self._w:
             ce = ce * self._w
         return ce
@@ -75,11 +75,11 @@ class BipartiteMatchingLoss(nn.Module):
 
         aligned_prediction_boxes = []
         aligned_target_boxes = []
-        aligned_prediction_scores = []
+        aligned_prediction_logits = []
         aligned_target_labels = []
 
-        for img_matching, img_targets, pred_scores, pred_boxes in \
-                zip(matching, targets, prediction['scores'], prediction['boxes']):
+        for img_matching, img_targets, pred_logits, pred_boxes in \
+                zip(matching, targets, prediction['logits'], prediction['boxes']):
             if len(img_targets) == 0:
                 continue
             pred_ids, tgt_ids = img_matching
@@ -90,20 +90,20 @@ class BipartiteMatchingLoss(nn.Module):
                 aligned_target_boxes.append(
                     torch.unsqueeze(img_targets['boxes'][tgt_idx], 0)
                 )
-                aligned_prediction_scores.append(
-                    torch.unsqueeze(pred_scores[pred_idx], 0)
+                aligned_prediction_logits.append(
+                    torch.unsqueeze(pred_logits[pred_idx], 0)
                 )
                 aligned_target_labels.append(
                     torch.unsqueeze(img_targets['labels'][tgt_idx], 0)
                 )
-            for i in range(len(pred_scores)):
+            for i in range(len(pred_logits)):
                 if i in pred_ids:
                     continue
-                aligned_prediction_scores.append(
-                    torch.unsqueeze(pred_scores[i], 0)
+                aligned_prediction_logits.append(
+                    torch.unsqueeze(pred_logits[i], 0)
                 )
                 aligned_target_labels.append(
-                    torch.tensor([0]).long().to(pred_scores.device)
+                    torch.tensor([0]).long().to(pred_logits.device)
                 )
 
         aligned_prediction_boxes = torch.cat(aligned_prediction_boxes)
@@ -114,11 +114,11 @@ class BipartiteMatchingLoss(nn.Module):
             targets=aligned_target_boxes,
         )
 
-        aligned_prediction_scores = torch.cat(aligned_prediction_scores)
+        aligned_prediction_logits = torch.cat(aligned_prediction_logits)
         aligned_target_labels = torch.cat(aligned_target_labels)
 
         classification_loss = self._clf(
-            predictions=aligned_prediction_scores,
+            logits=aligned_prediction_logits,
             targets=aligned_target_labels,
         )
 

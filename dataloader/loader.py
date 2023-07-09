@@ -9,7 +9,7 @@ from dataloader.voc_labels import VocLabelsCodec
 
 
 class VocPreprocessor:
-    def __init__(self):
+    def __init__(self, normalize_boxes=False):
         self._pipeline = A.Compose(
             [
                 A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=10),
@@ -20,11 +20,21 @@ class VocPreprocessor:
             ],
             bbox_params=A.BboxParams(format='pascal_voc', min_visibility=0.3)
         )
+        self._normalize = normalize_boxes
 
     def __call__(self, image, bboxes):
         preprocessed = VocPreprocessor.preprocess_sample((image, bboxes))
         r = self._pipeline(image=preprocessed['image'], bboxes=preprocessed['bboxes'])
-        return r['image'], r['bboxes']
+        if self._normalize:
+            img = r['image']
+            h, w, _ = img.shape
+            bboxes = [
+                (xmin / w, ymin / h, xmax / w, ymax / h, label)
+                for xmin, ymin, xmax, ymax, label in r['bboxes']
+            ]
+            return img, bboxes
+        else:
+            return r['image'], r['bboxes']
     
     @staticmethod
     def preprocess_sample(sample):
@@ -54,7 +64,7 @@ def disbatch(boxes, labels, obj_amount):
 
 
 def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
-                     root="vocdata", target_classes=None, max_size=None):
+                     root="vocdata", target_classes=None, max_size=None, normalize_boxes=True):
     codec = VocLabelsCodec(target_classes=target_classes)
 
     def collate(batch):
@@ -82,7 +92,7 @@ def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
         year="2012",
         image_set=subset,
         download=download,
-        transforms=VocPreprocessor(),
+        transforms=VocPreprocessor(normalize_boxes=normalize_boxes),
     )
     if max_size:
         dataset = Subset(dataset, range(max_size))

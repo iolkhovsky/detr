@@ -34,7 +34,7 @@ class HungarianMatcher(nn.Module):
         C = self._w_l1 * cost_bbox + self._w_class * cost_class + self._w_giou * cost_giou
         C = C.view(b, n, -1).cpu()
 
-        sizes = [len(v["boxes"]) for v in targets]
+        sizes = [len(v['boxes']) for v in targets]
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
         return [
             (torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64))

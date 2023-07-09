@@ -6,7 +6,7 @@ import torchvision
 from model import DETR
 from dataloader.visualization import visualize_batch
 from dataloader.voc_labels import VocLabelsCodec
-
+from util.bbox import denormalize_boxes
 
 class DetrModule(pl.LightningModule):
     def __init__(self, *args, **kwargs) -> None:
@@ -79,10 +79,13 @@ class DetrModule(pl.LightningModule):
                 gt_labels_list.append(labels[offset:offset + cnt])
                 offset += cnt
 
+            img_shapes = [x.shape for x in images]
+            denormalized_boxes = denormalize_boxes(gt_boxes_list, img_shapes)
+
             self.visualize_target(
                 images=images,
                 labels=gt_labels_list,
-                boxes=gt_boxes_list,
+                boxes=denormalized_boxes,
             )
 
             pr_labels_list, pr_boxes_list, pr_scores_list = [], [], []

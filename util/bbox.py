@@ -40,3 +40,13 @@ def box_cxcywh_to_xyxy(x):
     b = [(x_c - 0.5 * w), (y_c - 0.5 * h),
          (x_c + 0.5 * w), (y_c + 0.5 * h)]
     return torch.stack(b, dim=-1)
+
+
+def denormalize_boxes(normalized_xyxy, imgs_shapes):
+    result = []
+    for img_boxes, img_shape in zip(normalized_xyxy, imgs_shapes):
+        if len(img_boxes):
+            h, w, _ = img_shape
+            img_boxes = img_boxes * torch.tensor([w, h] * 2)
+        result.append(img_boxes)
+    return result
