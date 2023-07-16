@@ -1,4 +1,6 @@
+albumentations
 pytorch-lightning
+scipy
 torch
 torchvision
 matplotlib

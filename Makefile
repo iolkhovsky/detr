@@ -9,7 +9,7 @@ train: FORCE
 	python3 train.py \
 		--device=cpu \
 		--epochs=10 \
-		--logdir=$(LOGDIR) \
+		--logdir=$(CONT_DIR) \
 		--train_batch=4 \
 		--val_batch=16 \
 		--val_interval=50 \
@@ -53,13 +53,17 @@ pull_image: FORCE
 FORCE:
 
 container: FORCE
-	docker run --name lab bitofplastic/images:detr_train_v0
-	mkdir $(HOST_DIR)
+	mkdir -p $(HOST_DIR)
 	docker run \
+		-it \
 		-d \
 		--name detr_lab \
 		-p $(PORT):$(PORT) \
 		-v $(HOST_DIR):$(CONT_DIR) \
 		--env CUDA_VISIBLE_DEVICES=$(CUDA_VISIBLE_DEVICES) \
 		bitofplastic/images:detr_train_v0
+FORCE:
+
+attach: FORCE
+	docker start -ia detr_lab
 FORCE:
