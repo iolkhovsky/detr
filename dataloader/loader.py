@@ -64,7 +64,7 @@ def disbatch(boxes, labels, obj_amount):
 
 
 def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
-                     root="vocdata", target_classes=None, max_size=None, normalize_boxes=True):
+                     root='vocdata', target_classes=None, max_size=None, normalize_boxes=True):
     codec = VocLabelsCodec(target_classes=target_classes)
 
     def collate(batch):
@@ -89,7 +89,7 @@ def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
 
     dataset = torchvision.datasets.VOCDetection(
         root=root,
-        year="2012",
+        year='2012',
         image_set=subset,
         download=download,
         transforms=VocPreprocessor(normalize_boxes=normalize_boxes),
