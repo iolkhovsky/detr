@@ -1,6 +1,11 @@
 LOGDIR := "/content/drive/MyDrive/colab_training/logs/detr"
+IMAGE := "d495374ddbd1"
+HOST_DIR := "/tmp/detr"
+CONT_DIR := "/home/temp"
+PORT := 55502
+CUDA_VISIBLE_DEVICES := "4"
 
-train_cpu: FORCE
+train: FORCE
 	python3 train.py \
 		--device=cpu \
 		--epochs=10 \
@@ -11,7 +16,7 @@ train_cpu: FORCE
 		--download
 FORCE:
 
-train_gpu: FORCE
+train_cloud: FORCE
 	python3 train.py \
 		--device=gpu \
 		--epochs=100 \
@@ -20,4 +25,41 @@ train_gpu: FORCE
 		--val_batch=32 \
 		--val_interval=20 \
 		--download
+FORCE:
+
+train_container: FORCE
+	python3 train.py \
+		--device=gpu \
+		--epochs=40 \
+		--logdir=$(CONT_DIR) \
+		--train_batch=64 \
+		--val_batch=32 \
+		--val_interval=40 \
+		--download
+FORCE:
+
+image: FORCE
+	docker build -t detr_training docker
+FORCE:
+
+push_image: FORCE
+	docker login
+	docker tag $(IMAGE) bitofplastic/images:detr_train_v0
+	docker push bitofplastic/images:detr_train_v0
+FORCE:
+
+pull_image: FORCE
+	docker pull bitofplastic/images:detr_train_v0
+FORCE:
+
+container: FORCE
+	docker run --name lab bitofplastic/images:detr_train_v0
+	mkdir $(HOST_DIR)
+	docker run \
+		-d \
+		--name detr_lab \
+		-p $(PORT):$(PORT) \
+		-v $(HOST_DIR):$(CONT_DIR) \
+		--env CUDA_VISIBLE_DEVICES=$(CUDA_VISIBLE_DEVICES) \
+		bitofplastic/images:detr_train_v0
 FORCE:
