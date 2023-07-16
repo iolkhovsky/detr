@@ -44,8 +44,8 @@ FORCE:
 
 push_image: FORCE
 	docker login
-	docker tag $(IMAGE) bitofplastic/images:detr_train_v0
-	docker push bitofplastic/images:detr_train_v0
+	docker tag detr_training bitofplastic/images:detr_train_v1
+	docker push bitofplastic/images:detr_train_v1
 FORCE:
 
 pull_image: FORCE
