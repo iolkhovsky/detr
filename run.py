@@ -12,10 +12,10 @@ from dataloader.voc_labels import VocLabelsCodec
 def parse_cmd_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint',
-                        default=os.path.join('checkpoints', 'epoch-0011-loss-0.000000-acc-0.000000-v1.ckpt'),
+                        default=os.path.join('checkpoints', 'epoch-0003-loss-0.000000-acc-0.000000.ckpt'),
                         help='Path to DETR checkpoint')
     parser.add_argument('--threshold',
-                        default=0.05,
+                        default=0.0,
                         help='Confidence threshold')
     args = parser.parse_args()
     return args
