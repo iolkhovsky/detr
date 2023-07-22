@@ -68,7 +68,7 @@ class DetrModule(pl.LightningModule):
 
 
     def validation_step(self, batch, batch_idx: int) -> None:
-        THRESHOLD = 0.1
+        THRESHOLD = 0.0
         if batch_idx == 0:
             images, boxes, labels, obj_cnt = batch
             predictions = self.model(images)
