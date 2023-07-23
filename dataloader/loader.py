@@ -1,6 +1,7 @@
 import albumentations as A
 import numpy as np
 import itertools
+import sys
 import torchvision
 import torch
 from torch.utils.data import DataLoader, Subset
@@ -63,6 +64,14 @@ def disbatch(boxes, labels, obj_amount):
     return boxes, labels
 
 
+def filter_samples_by_label(dataset, target_classes):
+    for sample in dataset:
+        _, annotations = sample
+        classes = {obj[-1] for obj in annotations}
+        if set(target_classes).intersection(classes):
+            yield sample
+
+
 def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
                      root='vocdata', target_classes=None, max_size=None, normalize_boxes=True):
     codec = VocLabelsCodec(target_classes=target_classes)
@@ -94,6 +103,13 @@ def build_dataloader(subset='train', batch_size=4, shuffle=True, download=False,
         download=download,
         transforms=VocPreprocessor(normalize_boxes=normalize_boxes),
     )
+    dataset_size_gb = sys.getsizeof(dataset) / 10e9
+    print(f'Loaded dataset size (GB): {format(dataset_size_gb, ".2f")}')
+    if target_classes:
+        dataset = filter_samples_by_label(dataset, target_classes)
+        dataset = list(dataset)
+        dataset_size_gb = sys.getsizeof(dataset) / 10e9
+        print(f'Filtered dataset size (GB): {format(dataset_size_gb, ".2f")}')
     if max_size:
         dataset = Subset(dataset, range(max_size))
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=collate)

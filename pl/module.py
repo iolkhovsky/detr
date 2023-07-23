@@ -68,7 +68,6 @@ class DetrModule(pl.LightningModule):
 
 
     def validation_step(self, batch, batch_idx: int) -> None:
-        THRESHOLD = 0.0
         if batch_idx == 0:
             images, boxes, labels, obj_cnt = batch
             predictions = self.model(images)
@@ -92,15 +91,9 @@ class DetrModule(pl.LightningModule):
             for boxes, scores in zip(predictions['boxes'], predictions['scores']):
                 max_scores, _ = torch.max(scores, dim=1)
                 labels = torch.argmax(scores, dim=-1)
-                non_bg_mask = labels > 0
-                high_score_mask = max_scores > THRESHOLD
-                mask = non_bg_mask & high_score_mask
-                filtered_labels = labels[mask]
-                filtered_boxes = boxes[mask]
-                filtered_scores = max_scores[mask]
-                pr_labels_list.append(filtered_labels)
-                pr_boxes_list.append(filtered_boxes)
-                pr_scores_list.append(filtered_scores)
+                pr_labels_list.append(labels)
+                pr_boxes_list.append(boxes)
+                pr_scores_list.append(max_scores)
 
             self.visualize_prediction(
                 images=images,

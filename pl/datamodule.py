@@ -22,7 +22,7 @@ class VocDataset(pl.LightningDataModule):
             batch_size=self._train_batch,
             shuffle=True,
             download=self._download,
-            root="vocdata",
+            root='vocdata',
             target_classes=self._target_classes,
         )
 
@@ -32,7 +32,7 @@ class VocDataset(pl.LightningDataModule):
             batch_size=self._val_batch,
             shuffle=False,
             download=self._download,
-            root="vocdata",
+            root='vocdata',
             target_classes=self._target_classes,
             max_size=128,
         )

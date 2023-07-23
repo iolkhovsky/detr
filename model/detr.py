@@ -11,8 +11,8 @@ from util import box_cxcywh_to_xyxy
 
 
 class DETR(nn.Module):
-    def __init__(self, resolution=(224, 224), hidden_dim=256, classes=1,
-                 attention_heads=8, transformer_layers=6, queries=20,
+    def __init__(self, resolution=(224, 224), hidden_dim=128, classes=1,
+                 attention_heads=2, transformer_layers=2, queries=10,
                  class_weight=1., l1_weight=5., giou_weight=2.):
         super(DETR,self).__init__()
         h, w = resolution
