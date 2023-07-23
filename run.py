@@ -12,11 +12,14 @@ from dataloader.voc_labels import VocLabelsCodec
 def parse_cmd_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint',
-                        default=os.path.join('checkpoints', 'epoch-0003-loss-0.000000-acc-0.000000.ckpt'),
+                        default=os.path.join('checkpoints', 'last.ckpt'),
                         help='Path to DETR checkpoint')
     parser.add_argument('--threshold',
-                        default=0.0,
+                        default=0.5,
                         help='Confidence threshold')
+    parser.add_argument('--source',
+                        default=0,
+                        help='Video source')
     args = parser.parse_args()
     return args
 
@@ -80,7 +83,7 @@ class Profiler:
 def run(args):
     model = compile_model(args.checkpoint, 'cpu')
 
-    video_source = str(0)
+    video_source = str(args.source)
     if video_source.isdigit():
         video_source = int(video_source)
     resolution = (640, 480)
