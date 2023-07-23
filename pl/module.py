@@ -104,11 +104,11 @@ class DetrModule(pl.LightningModule):
 
             writer = self.logger.experiment
 
-            queries = self.model._query[0].detach().numpy()
+            queries = self.model._query[0].detach().cpu().numpy()
             pca_queries_images = [visualize_pca(queries, title='Queries PCA')]
             pca_queries_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in pca_queries_images]
 
-            pred_embeddings = embeddings[0].detach().numpy()
+            pred_embeddings = embeddings[0].detach().cpu().numpy()
             pca_embeddings_images = [visualize_pca(pred_embeddings, title='Embeddings PCA')]
             pca_embeddings_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in pca_embeddings_images]
 
