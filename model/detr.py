@@ -12,7 +12,7 @@ from util import box_cxcywh_to_xyxy
 
 class DETR(nn.Module):
     def __init__(self, resolution=(224, 224), hidden_dim=128, classes=1,
-                 attention_heads=2, transformer_layers=2, queries=10,
+                 attention_heads=4, transformer_layers=2, queries=20,
                  class_weight=1., l1_weight=5., giou_weight=2.,
                  **kwargs):
         super(DETR,self).__init__()
