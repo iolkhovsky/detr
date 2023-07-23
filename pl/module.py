@@ -4,7 +4,7 @@ import torch
 import torchvision
 
 from model import DETR
-from dataloader.visualization import visualize_batch
+from dataloader.visualization import visualize_batch, visualize_pca
 from dataloader.voc_labels import VocLabelsCodec
 from util.bbox import denormalize_boxes
 
@@ -101,6 +101,13 @@ class DetrModule(pl.LightningModule):
                 scores=pr_scores_list,
                 boxes=pr_boxes_list,
             )
+
+            queries = self.model._query[0].detach().numpy()
+            pca_images = [visualize_pca(queries, title='Queries PCA')]
+            pca_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in pca_images]
+            pca_grid = torchvision.utils.make_grid(pca_tensors)
+            writer = self.logger.experiment
+            writer.add_image(f'PCA', pca_grid, self.global_step)
 
     def visualize_target(self, images, labels, boxes):
         codec = VocLabelsCodec(['person'])

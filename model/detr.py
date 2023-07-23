@@ -27,7 +27,7 @@ class DETR(nn.Module):
             width=7,
             hidden_dim=hidden_dim,
         )
-        self._query = nn.Parameter(torch.rand(1, queries, hidden_dim))
+        self._query = nn.Parameter(torch.randn(1, queries, hidden_dim))
         self._transformer = nn.Transformer(
             d_model=hidden_dim,
             nhead=attention_heads,
