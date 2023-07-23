@@ -63,6 +63,11 @@ def parse_args():
         help='Backbone learning rate',
     )
     parser.add_argument(
+        '--queries_lr', type=float,
+        default=1e-3,
+        help='Queries learning rate',
+    )
+    parser.add_argument(
         '--weight_decay', type=float,
         default=1e-4,
         help='Weight decay',
@@ -74,10 +79,9 @@ def parse_args():
     )
     parser.add_argument(
         '--grad_clip', type=float,
-        default=None,
+        default=1.,
         help='Clip gradients by value',
     )
-
     return parser.parse_args()
 
 
@@ -150,6 +154,7 @@ def run_training(args):
         backbone_lr=args.backbone_lr,
         weight_decay=args.weight_decay,
         step_lr=args.step_lr,
+        queries_lr=args.queries_lr,
     )
     if args.checkpoint:
         print(f'Fine-tuning checkpoint is set: {args.checkpoint}')

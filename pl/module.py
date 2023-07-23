@@ -16,22 +16,39 @@ class DetrModule(pl.LightningModule):
         self._lr_backbone = kwargs.get('backbone_lr', 1e-5)
         self._w_decay = kwargs.get('weight_decay', 1e-4)
         self._step_lr = kwargs.get('step_lr', 32)
+        self._queries_lr = kwargs.get('queries_lr', None)
 
     def configure_optimizers(self):
+        def bakbone_parameter(x):
+            return 'backbone' in x
+
+        def query_parameter(x):
+            return 'query' in x
+
+        def transformer_parameter(x):
+            return not(query_parameter(x) or bakbone_parameter(x))
+
         param_dicts = [
             {
                 'params': [
                     p for n, p in self.model.named_parameters()
-                    if 'backbone' not in n and p.requires_grad
+                    if transformer_parameter(n) and p.requires_grad
                 ],
                 'lr': self._lr_transformer,
             },
             {
                 'params': [
                     p for n, p in self.model.named_parameters()
-                    if 'backbone' in n and p.requires_grad
+                    if bakbone_parameter(n) and p.requires_grad
                 ],
                 'lr': self._lr_backbone,
+            },
+            {
+                'params': [
+                    p for n, p in self.model.named_parameters()
+                    if query_parameter(n) and p.requires_grad
+                ],
+                'lr': self._lr_transformer if self._queries_lr is None else self._queries_lr,
             },
         ]
         optimizer = torch.optim.AdamW(param_dicts, weight_decay=self._w_decay)
@@ -109,7 +126,7 @@ class DetrModule(pl.LightningModule):
 
             writer = self.logger.experiment
 
-            queries = self.model._query[0].detach().cpu().numpy()
+            queries = self.model._query.weight.detach().cpu().numpy()
             pca_queries_images = [visualize_pca(queries, title='Queries PCA')]
             pca_queries_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in pca_queries_images]
 

@@ -28,7 +28,7 @@ class DETR(nn.Module):
             width=7,
             hidden_dim=hidden_dim,
         )
-        self._query = nn.Parameter(torch.randn(1, queries, hidden_dim))
+        self._query = torch.nn.Embedding(queries, hidden_dim)
         self._transformer = nn.Transformer(
             d_model=hidden_dim,
             nhead=attention_heads,
@@ -61,7 +61,7 @@ class DETR(nn.Module):
         kv = self._position_emb(img_features)
 
         b, _, _, _ = img_features.shape
-        q = self._query.repeat([b, 1, 1])
+        q = self._query.weight.repeat([b, 1, 1])
 
         features = self._transformer(
             src=kv,
