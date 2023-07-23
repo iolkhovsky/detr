@@ -72,6 +72,12 @@ def parse_args():
         default=32,
         help='Decay step',
     )
+    parser.add_argument(
+        '--grad_clip', type=float,
+        default=None,
+        help='Clip gradients by value',
+    )
+
     return parser.parse_args()
 
 
@@ -125,7 +131,7 @@ def run_training(args):
         enable_progress_bar=True,
         enable_model_summary=True,
         accumulate_grad_batches=1,
-        gradient_clip_val=None,
+        gradient_clip_val=args.grad_clip,
         gradient_clip_algorithm='norm',
         deterministic=None,
         benchmark=None,
