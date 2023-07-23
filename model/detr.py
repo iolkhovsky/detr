@@ -49,7 +49,7 @@ class DETR(nn.Module):
             giou_weight=giou_weight,
         )
 
-    def forward(self, x, targets=None):
+    def forward(self, x, targets=None, return_embeddings=False):
         if targets is None:
             self.eval()
         else:
@@ -89,4 +89,7 @@ class DETR(nn.Module):
                 )
             )
 
-        return prediction
+        if return_embeddings:
+            return prediction, features
+        else:
+            return prediction

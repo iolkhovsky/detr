@@ -70,7 +70,7 @@ class DetrModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx: int) -> None:
         if batch_idx == 0:
             images, boxes, labels, obj_cnt = batch
-            predictions = self.model(images)
+            predictions, embeddings = self.model(images, return_embeddings=True)
 
             gt_boxes_list, gt_labels_list, offset = [], [], 0
             for cnt in obj_cnt:
@@ -102,11 +102,17 @@ class DetrModule(pl.LightningModule):
                 boxes=pr_boxes_list,
             )
 
-            queries = self.model._query[0].detach().numpy()
-            pca_images = [visualize_pca(queries, title='Queries PCA')]
-            pca_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in pca_images]
-            pca_grid = torchvision.utils.make_grid(pca_tensors)
             writer = self.logger.experiment
+
+            queries = self.model._query[0].detach().numpy()
+            pca_queries_images = [visualize_pca(queries, title='Queries PCA')]
+            pca_queries_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in pca_queries_images]
+
+            pred_embeddings = embeddings[0].detach().numpy()
+            pca_embeddings_images = [visualize_pca(pred_embeddings, title='Embeddings PCA')]
+            pca_embeddings_tensors = [torch.permute(torch.from_numpy(x), (2, 0, 1)) for x in pca_embeddings_images]
+
+            pca_grid = torchvision.utils.make_grid(pca_queries_tensors + pca_embeddings_tensors)
             writer.add_image(f'PCA', pca_grid, self.global_step)
 
     def visualize_target(self, images, labels, boxes):
