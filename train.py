@@ -52,6 +52,26 @@ def parse_args():
         '--download', action='store_true',
         help='Flag to download the dataset',
     )
+    parser.add_argument(
+        '--transformer_lr', type=float,
+        default=1e-4,
+        help='Transformer learning rate',
+    )
+    parser.add_argument(
+        '--backbone_lr', type=float,
+        default=1e-5,
+        help='Backbone learning rate',
+    )
+    parser.add_argument(
+        '--weight_decay', type=float,
+        default=1e-4,
+        help='Weight decay',
+    )
+    parser.add_argument(
+        '--step_lr', type=int,
+        default=32,
+        help='Decay step',
+    )
     return parser.parse_args()
 
 
@@ -119,7 +139,12 @@ def run_training(args):
         reload_dataloaders_every_n_epochs=0,
         default_root_dir=None,
     )
-    model = DetrModule()
+    model = DetrModule(
+        transformer_lr=args.transformer_lr,
+        backbone_lr=args.backbone_lr,
+        weight_decay=args.weight_decay,
+        step_lr=args.step_lr,
+    )
     if args.checkpoint:
         print(f'Fine-tuning checkpoint is set: {args.checkpoint}')
         checkpoint_dev = 'cuda' if args.device == 'gpu' else 'cpu'

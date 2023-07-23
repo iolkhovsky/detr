@@ -12,6 +12,10 @@ class DetrModule(pl.LightningModule):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
         self.model = DETR(*args, **kwargs)
+        self._lr_transformer = kwargs.get('transformer_lr', 1e-4)
+        self._lr_backbone = kwargs.get('backbone_lr', 1e-5)
+        self._w_decay = kwargs.get('weight_decay', 1e-4)
+        self._step_lr = kwargs.get('step_lr', 32)
 
     def configure_optimizers(self):
         param_dicts = [
@@ -19,18 +23,19 @@ class DetrModule(pl.LightningModule):
                 'params': [
                     p for n, p in self.model.named_parameters()
                     if 'backbone' not in n and p.requires_grad
-                ]
+                ],
+                'lr': self._lr_transformer,
             },
             {
                 'params': [
                     p for n, p in self.model.named_parameters()
                     if 'backbone' in n and p.requires_grad
                 ],
-                'lr': 1e-5,
+                'lr': self._lr_backbone,
             },
         ]
-        optimizer = torch.optim.AdamW(param_dicts, lr=1e-4, weight_decay=1e-4)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 200)
+        optimizer = torch.optim.AdamW(param_dicts, weight_decay=self._w_decay)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, self._step_lr)
         return [[optimizer], [scheduler]]
 
     def configure_callbacks(self):
